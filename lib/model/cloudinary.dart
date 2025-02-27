@@ -1,21 +1,29 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-class CloudinaryUploadData {
-  final String filePath;
-  final FirebaseUser user;
+class CloudinaryConfig {
+  final String cloudName;
   final String apiKey;
   final String apiSecret;
-  final String apiUrl;
-  final String publicId;
+  final String uploadPreset;
+  final User user;
 
-  CloudinaryUploadData({
-    this.filePath,
-    this.user,
-    this.apiKey,
-    this.apiSecret,
-    this.apiUrl,
-    this.publicId,
+  CloudinaryConfig({
+    required this.cloudName,
+    required this.apiKey,
+    required this.apiSecret,
+    required this.uploadPreset,
+    required this.user,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'cloud_name': cloudName,
+      'api_key': apiKey,
+      'api_secret': apiSecret,
+      'upload_preset': uploadPreset,
+      'user_id': user.uid,
+    };
+  }
 }
 
 class CloudinaryImage {
@@ -36,44 +44,44 @@ class CloudinaryImage {
   final String secureUrl;
 
   CloudinaryImage({
-    this.publicId,
-    this.version,
-    this.signature,
-    this.width,
-    this.height,
-    this.format,
-    this.resourceType,
-    this.createdAt,
-    this.tags,
-    this.bytes,
-    this.type,
-    this.etag,
-    this.placeholder,
-    this.url,
-    this.secureUrl,
+    required this.publicId,
+    required this.version,
+    required this.signature,
+    required this.width,
+    required this.height,
+    required this.format,
+    required this.resourceType,
+    required this.createdAt,
+    required this.tags,
+    required this.bytes,
+    required this.type,
+    required this.etag,
+    required this.placeholder,
+    required this.url,
+    required this.secureUrl,
   });
 
-  factory CloudinaryImage.fromJson(Map<dynamic, dynamic> json) {
+  factory CloudinaryImage.fromJson(Map<String, dynamic>? json) {
     if (json == null) {
-      return null;
+      throw Exception('Cannot create CloudinaryImage from null JSON');
     }
 
     return CloudinaryImage(
-      publicId: json['public_id'],
-      version: json['version'],
-      signature: json['signature'],
-      width: json['width'],
-      height: json['height'],
-      format: json['format'],
-      resourceType: json['resource_type'],
-      createdAt: json['created_at'],
-      tags: json['tags'],
-      bytes: json['bytes'],
-      type: json['type'],
-      etag: json['etag'],
-      placeholder: json['placeholder'],
-      url: json['url'],
-      secureUrl: json['secure_url'],
+      publicId: json['public_id'] as String,
+      version: json['version'] as int,
+      signature: json['signature'] as String,
+      width: json['width'] as int,
+      height: json['height'] as int,
+      format: json['format'] as String,
+      resourceType: json['resource_type'] as String,
+      createdAt: json['created_at'] as String,
+      tags: json['tags'] as List<dynamic>,
+      bytes: json['bytes'] as int,
+      type: json['type'] as String,
+      etag: json['etag'] as String,
+      placeholder: json['placeholder'] as bool,
+      url: json['url'] as String,
+      secureUrl: json['secure_url'] as String,
     );
   }
 }

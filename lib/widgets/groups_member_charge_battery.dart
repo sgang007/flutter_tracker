@@ -6,14 +6,14 @@ import 'package:flutter_tracker/model/groups_viewmodel.dart';
 import 'package:flutter_tracker/state.dart';
 import 'package:flutter_tracker/utils/group_utils.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
 class GroupsMemberChargeBattery extends StatefulWidget {
   final GroupMember member;
-  final Widget child;
+  final Widget? child;
 
-  GroupsMemberChargeBattery({
-    @required this.member,
+  const GroupsMemberChargeBattery({
+    required this.member,
     this.child,
   });
 
@@ -45,10 +45,10 @@ class _GroupsMemberChargeBatteryState extends State<GroupsMemberChargeBattery> {
 
   Future<bool> _tapShow(
     GroupsViewModel viewModel,
-  ) {
+  ) async {
     String memberName = getGroupMemberName(widget.member, viewModel: viewModel);
 
-    return Alert(
+    final result = await Alert(
       context: context,
       title: 'Battery low?',
       style: AlertStyle(
@@ -106,5 +106,7 @@ class _GroupsMemberChargeBatteryState extends State<GroupsMemberChargeBattery> {
         ),
       ],
     ).show();
+
+    return result ?? false;
   }
 }

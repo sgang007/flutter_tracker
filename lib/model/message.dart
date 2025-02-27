@@ -1,62 +1,49 @@
 import 'package:flutter/material.dart';
 
-enum MessageType {
-  INFO,
-  SUCCESS,
-  WARNING,
-  ERROR,
-}
+enum MessageType { INFO, SUCCESS, WARNING, ERROR }
 
 class Message {
-  String message;
-  int duration;
-  MessageType type;
-  double iconSize;
-  double padding;
-  double bottomOffset;
+  final String message;
+  final int duration;
+  final MessageType type;
+  final double iconSize;
+  final double padding;
+  final double? bottomOffset;
 
   Message({
-    this.message,
-    this.duration: 2,
-    this.type: MessageType.INFO,
-    this.iconSize: 28.0,
-    this.padding: 8.0,
+    required this.message,
+    this.duration = 2,
+    this.type = MessageType.INFO,
+    this.iconSize = 28.0,
+    this.padding = 8.0,
     this.bottomOffset,
   });
 
-  toString() => 'Message.$message';
-
-  getIcon() {
-    switch (this.type) {
+  IconData getIcon() {
+    switch (type) {
       case MessageType.SUCCESS:
-        return Icons.check_circle_outline;
-
+        return Icons.check_circle;
       case MessageType.WARNING:
         return Icons.warning;
-
       case MessageType.ERROR:
-        return Icons.error_outline;
-
+        return Icons.error;
       case MessageType.INFO:
       default:
-        return Icons.info_outline;
+        return Icons.info;
     }
   }
 
-  getIconColor() {
-    switch (this.type) {
+  Color getColor() {
+    switch (type) {
       case MessageType.SUCCESS:
         return Colors.green;
-
       case MessageType.WARNING:
         return Colors.orange;
-
       case MessageType.ERROR:
         return Colors.red;
-
       case MessageType.INFO:
       default:
-        return Colors.pink;
+        return Colors.blue;
     }
   }
 }

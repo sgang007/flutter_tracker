@@ -17,13 +17,13 @@ import 'package:flutter_tracker/widgets/place_map.dart';
 import 'package:flutter_tracker/widgets/section_header.dart';
 import 'package:flutter_tracker/widgets/text_field.dart';
 import 'package:flutter_tracker/widgets/user_avatar.dart';
-import 'package:latlong/latlong.dart' as latlng;
-import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:sticky_headers/sticky_headers/widget.dart';
 
 class GroupsPlacesDetailsPage extends StatefulWidget {
   GroupsPlacesDetailsPage({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -32,8 +32,8 @@ class GroupsPlacesDetailsPage extends StatefulWidget {
 
 class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     with TickerProviderStateMixin {
-  AnimationController _detailsBackdropAnimationController;
-  AnimationController _savingBackdropAnimationController;
+  late AnimationController _detailsBackdropAnimationController;
+  late AnimationController _savingBackdropAnimationController;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -42,12 +42,12 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
   bool _isProcessing = false;
   bool _autoValidate = true;
 
-  PlaceMap _map;
-  latlng.LatLng _position;
-  double _zoneDistance;
-  String _name;
-  String _address;
-  Map<dynamic, dynamic> _notifications;
+  PlaceMap? _map;
+  LatLng? _position;
+  double? _zoneDistance;
+  String? _name;
+  String? _address;
+  Map<dynamic, dynamic>? _notifications;
 
   @override
   void initState() {
@@ -95,7 +95,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
             return Future.value(true);
           },
           child: Scaffold(
-            resizeToAvoidBottomPadding: true,
+            resizeToAvoidBottomInset: true,
             appBar: _buildBar(context, viewModel),
             body: _createContent(context, viewModel),
           ),
@@ -104,7 +104,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     );
   }
 
-  Widget _buildBar(
+  PreferredSizeWidget _buildBar(
     BuildContext context,
     GroupsViewModel viewModel,
   ) {
@@ -115,17 +115,13 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
       ),
       titleSpacing: 0.0,
       actions: <Widget>[
-        FlatButton(
-          textColor: AppTheme.primary,
-          onPressed: () => _tapSave(viewModel),
-          // onPressed: ((_formKey.currentState != null) &&
-          //         _formKey.currentState.validate())
-          //     ? () => _tapSave(viewModel)
-          //     : null,
-          child: Text('Save'),
-          shape: CircleBorder(
-            side: BorderSide(color: Colors.transparent),
+        TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: AppTheme.primary,
+            shape: CircleBorder(),
           ),
+          onPressed: () => _tapSave(viewModel),
+          child: Text('Save'),
         ),
       ],
     );
@@ -143,11 +139,11 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     if (_map == null) {
       _map = PlaceMap(
         initialDistance: ((viewModel.activePlace == null) ||
-                (viewModel.activePlace.distance == null))
+                (viewModel.activePlace?.distance == null))
             ? 100.0
-            : viewModel.activePlace.distance,
+            : viewModel.activePlace!.distance,
         positionCallback: (
-          latlng.LatLng position,
+          LatLng position,
           double zoneDistance,
         ) {
           _position = position;
@@ -160,11 +156,11 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
       children: [
         Form(
           key: _formKey,
-          autovalidate: _autoValidate,
+          autovalidateMode: _autoValidate ? AutovalidateMode.always : AutovalidateMode.disabled,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                _map,
+                _map!,
               ]..addAll(filterNullWidgets(children)),
             ),
           ),
@@ -178,10 +174,10 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     );
   }
 
-  Widget _buildDetails(
+  Widget? _buildDetails(
     GroupsViewModel viewModel,
   ) {
-    Place activePlace = viewModel.activePlace;
+    Place? activePlace = viewModel.activePlace;
     if (activePlace != null) {
       if (viewModel.searchingPlaces) {
         _detailsBackdropAnimationController.forward();
@@ -211,8 +207,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
                   controller: _nameController,
                   hintText: 'Name this Place. Ex: Home',
                   icon: Icons.bookmark,
-                  // validator: (value) => GroupValidators.validateName(value),
-                  onSaved: (String val) => (_name = val),
+                  onSaved: (String? val) => _name = val,
                 ),
                 CustomTextField(
                   controller: _addressController,
@@ -220,7 +215,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
                   icon: Icons.location_on,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
-                  onSaved: (String val) => (_address = val),
+                  onSaved: (String? val) => _address = val,
                 ),
               ],
             ),
@@ -236,15 +231,15 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     );
   }
 
-  Widget _buildNotifications(
+  Widget? _buildNotifications(
     GroupsViewModel viewModel,
   ) {
-    List<GroupMember> filtered = filteredGroupMembers(
+    List<GroupMember>? filtered = filteredGroupMembers(
       viewModel.activeGroup,
       viewModel.user,
     );
 
-    if ((filtered == null) || (filtered.length == 0)) {
+    if ((filtered == null) || (filtered.isEmpty)) {
       return null;
     }
 
@@ -268,7 +263,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
   ) {
     List<Widget> tiles = [];
 
-    if (filtered != null) {
+    if (filtered.isNotEmpty) {
       filtered.forEach((member) {
         tiles
           ..add(
@@ -283,7 +278,6 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
                 avatarRadius: 24.0,
               ),
               trailing: _buildEnteringToggle(viewModel, member),
-              onTap: null,
               contentPadding: const EdgeInsets.only(
                 left: 10.0,
                 right: 0.0,
@@ -297,7 +291,6 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
           ..add(
             ListTile(
               trailing: _buildLeavingToggle(viewModel, member),
-              onTap: null,
               contentPadding: const EdgeInsets.only(
                 left: 10.0,
                 right: 0.0,
@@ -363,7 +356,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
 
   List<Widget> _buildDeleteButton(GroupsViewModel viewModel) {
     if ((viewModel.activePlace == null) ||
-        (viewModel.activePlace.documentId == null)) {
+        (viewModel.activePlace?.documentId == null)) {
       return [];
     }
 
@@ -374,12 +367,13 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: FlatButton(
-                color: Colors.red,
-                splashColor: Colors.redAccent[700],
-                textColor: Colors.white,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: StadiumBorder(),
+                ),
                 child: Text('Delete Place'),
-                shape: StadiumBorder(),
                 onPressed: () => _tapDelete(viewModel),
               ),
             ),
@@ -396,7 +390,7 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     String type,
   ) {
     setState(() {
-      _notifications[viewModel.user.documentId][member.uid][type] = value;
+      _notifications?[viewModel.user.documentId]?[member.uid]?[type] = value;
     });
   }
 
@@ -405,15 +399,11 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
     GroupMember member,
     String type,
   ) {
-    dynamic notificationData = _notifications[viewModel.user.documentId];
-    if (notificationData.containsKey(member.uid)) {
-      bool doNotification =
-          _notifications[viewModel.user.documentId][member.uid][type];
-      if (doNotification == null) {
-        return false;
-      }
-
-      return doNotification;
+    dynamic notificationData = _notifications?[viewModel.user.documentId];
+    if (notificationData?.containsKey(member.uid) ?? false) {
+      bool? doNotification =
+          _notifications?[viewModel.user.documentId]?[member.uid]?[type];
+      return doNotification ?? false;
     }
 
     return false;
@@ -424,66 +414,68 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
   ) {
     _savingBackdropAnimationController.forward();
 
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
       final store = StoreProvider.of<AppState>(context);
-      Place place = viewModel.activePlace;
-      place.name = _name;
-      place.distance = _zoneDistance;
+      Place? place = viewModel.activePlace;
+      if (place != null) {
+        place.name = _name;
+        place.distance = _zoneDistance;
 
-      if (_notifications != null) {
-        if (place.notifications == null) {
-          place.notifications = _notifications;
-        } else {
-          // Merge the maps to prevent data loss
-          place.notifications = {}
-            ..addAll(place.notifications)
-            ..addAll(_notifications);
+        if (_notifications != null) {
+          if (place.notifications == null) {
+            place.notifications = _notifications;
+          } else {
+            // Merge the maps to prevent data loss
+            place.notifications = {}
+              ..addAll(place.notifications!)
+              ..addAll(_notifications!);
+          }
         }
-      }
 
-      if (place.details == null) {
-        place.details = PlaceDetail.fromJson({
-          'vicinity': _address,
-        });
-      } else {
-        place.details.vicinity = _address;
-      }
+        if (place.details == null) {
+          place.details = PlaceDetail.fromJson({
+            'vicinity': _address,
+          });
+        } else {
+          place.details.vicinity = _address;
+        }
 
-      // Allows the user to override the place position from the form
-      if (_position != null) {
-        place.details.position = [
-          _position.latitude,
-          _position.longitude,
-        ];
-      }
+        // Allows the user to override the place position from the form
+        if (_position != null) {
+          place.details.position = [
+            _position!.latitude,
+            _position!.longitude,
+          ];
+        }
 
-      if (place.documentId == null) {
-        store.dispatch(
-          SavePlaceAction(
-            Place.create(
-              _name,
-              place.details,
-              groupId: viewModel.activeGroup.documentId,
-              distance: _zoneDistance,
-              notifications: _notifications,
+        if (place.documentId == null) {
+          store.dispatch(
+            SavePlaceAction(
+              Place.create(
+                _name!,
+                place.details,
+                groupId: viewModel.activeGroup!.documentId,
+                distance: _zoneDistance,
+                notifications: _notifications,
+              ),
+              _savingBackdropAnimationController,
             ),
-            _savingBackdropAnimationController,
-          ),
-        );
-      } else {
-        store.dispatch(
-          UpdatePlaceAction(
-            place.documentId,
-            Place().toMap(place),
-            _savingBackdropAnimationController,
-          ),
-        );
-      }
+          );
+        } else {
+          store.dispatch(
+            UpdatePlaceAction(
+              place.documentId!,
+              Place().toMap(place),
+              _savingBackdropAnimationController,
+            ),
+          );
+        }
 
-      closeKeyboard(context);
-      return true;
+        closeKeyboard(context);
+        return true;
+      }
     }
 
     _isProcessing = false;
@@ -494,154 +486,35 @@ class _GroupsPlacesDetailsPageState extends State<GroupsPlacesDetailsPage>
   void _tapDelete(
     GroupsViewModel viewModel,
   ) {
-    Alert(
+    showDialog(
       context: context,
-      title: 'DELETE PLACE',
-      desc: 'Are you sure you want to delete this place?',
-      style: AlertStyle(
-        alertBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(0.0),
-        ),
-        descStyle: const TextStyle(
-          color: Colors.black38,
-          fontStyle: FontStyle.normal,
-          fontSize: 14.0,
-          height: 1.5,
-        ),
-      ),
-      closeFunction: () {},
-      buttons: [
-        DialogButton(
-          child: Text(
-            'Yes',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14.0,
-            ),
-          ),
-          onPressed: () {
-            final store = StoreProvider.of<AppState>(context);
-            store.dispatch(DeletePlaceAction(viewModel.activePlace));
-            store.dispatch(SetSelectedTabIndexAction(TAB_PLACES));
-            store.dispatch(NavigatePushAction(AppRoutes.home));
-          },
-          color: Colors.redAccent[700],
-        ),
-        DialogButton(
-          child: const Text(
-            'No',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14.0,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-          color: AppTheme.inactive(),
-        ),
-      ],
-    ).show();
-  }
-
-  void _updateForm(
-    Place place,
-  ) {
-    if (place != null) {
-      if ((place.name == null) && !_built) {
-        // Open the name dialog
-        Future.delayed(Duration.zero, () => _buildNameDialog(context));
-      } else {
-        _nameController.text = place.name;
-      }
-
-      _addressController.text = place.details.vicinity;
-    }
-  }
-
-  Future<String> _buildNameDialog(
-    BuildContext context,
-  ) async {
-    String name = '';
-
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (
-        BuildContext context,
-      ) =>
-          AlertDialog(
-        title: const Text(
-          'Place Name',
-          style: const TextStyle(fontSize: 18.0),
-        ),
-        content: Row(
-          children: <Widget>[
-            Expanded(
-              child: CustomTextField(
-                autofocus: true,
-                controller: _nameController,
-                hintText: 'Name this Place. Ex: Home',
-                icon: Icons.bookmark,
-                // validator: (value) => GroupValidators.validateName(value),
-                onSaved: (String val) => (_name = val),
-              ),
-            ),
-          ],
-        ),
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('DELETE PLACE'),
+        content: Text('Are you sure you want to delete this place?'),
         actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(
-              bottom: 10.0,
-              left: 10.0,
-              right: 10.0,
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
             ),
-            child: FlatButton(
-              color: AppTheme.primary,
-              splashColor: AppTheme.primaryAccent,
-              textColor: Colors.white,
-              child: Text('OK'),
-              shape: StadiumBorder(),
-              onPressed: () => Navigator.of(context).pop(name),
-            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              final store = StoreProvider.of<AppState>(context);
+              store.dispatch(
+                DeletePlaceAction(
+                  viewModel.activePlace!.documentId!,
+                  _savingBackdropAnimationController,
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
-
-  void _buildNotificationMap(
-    GroupsViewModel viewModel,
-    List<GroupMember> members,
-  ) {
-    if (_notifications == null) {
-      _notifications = Map<dynamic, dynamic>();
-      _notifications = {viewModel.user.documentId: {}};
-    }
-
-    dynamic userNotifications;
-
-    if (viewModel.activePlace.notifications != null) {
-      userNotifications =
-          viewModel.activePlace.notifications[viewModel.user.documentId];
-    }
-
-    members.forEach((member) {
-      if (userNotifications == null) {
-        _notifications[viewModel.user.documentId][member.uid] = {
-          'entering': false,
-          'leaving': false,
-        };
-      } else if (userNotifications.containsKey(member.uid)) {
-        _notifications[viewModel.user.documentId][member.uid] = {
-          'entering': userNotifications[member.uid]['entering'],
-          'leaving': userNotifications[member.uid]['leaving'],
-        };
-      } else {
-        _notifications[viewModel.user.documentId] = {};
-        _notifications[viewModel.user.documentId][member.uid] = {
-          'entering': false,
-          'leaving': false,
-        };
-      }
-    });
-  }
 }
+```

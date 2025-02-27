@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:admob_flutter/admob_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_tracker/model/groups_viewmodel.dart';
 
@@ -13,9 +13,11 @@ Widget bannerAd(
       top: 20.0,
       bottom: 20.0,
     ),
-    child: AdmobBanner(
+    child: BannerAd(
       adUnitId: getBannerAdUnitId(viewModel),
-      adSize: AdmobBannerSize.BANNER,
+      size: AdSize.banner,
+      request: AdRequest(),
+      listener: BannerAdListener(),
     ),
   );
 }
@@ -23,7 +25,7 @@ Widget bannerAd(
 List<T> injectAd<T>(
   List<dynamic> list,
   dynamic ad, {
-  int minEntriesNeeded: 10,
+  int minEntriesNeeded = 10,
 }) {
   if (list == null) {
     return null;
@@ -48,24 +50,20 @@ String getAppId(
   String androidAppId,
   String iosAppId,
 ) {
-  if (Platform.isIOS) {
+  if (Platform.isAndroid) {
     return androidAppId;
-  } else if (Platform.isAndroid) {
+  } else if (Platform.isIOS) {
     return iosAppId;
   }
-
   return null;
 }
 
-String getBannerAdUnitId(
-  GroupsViewModel viewModel,
-) {
-  if (Platform.isIOS) {
-    return viewModel.configValue('admob_ios_banner');
-  } else if (Platform.isAndroid) {
-    return viewModel.configValue('admob_android_banner');
+String getBannerAdUnitId(GroupsViewModel viewModel) {
+  if (Platform.isAndroid) {
+    return 'ca-app-pub-3940256099942544/6300978111'; // Test Ad Unit ID for Android
+  } else if (Platform.isIOS) {
+    return 'ca-app-pub-3940256099942544/2934735716'; // Test Ad Unit ID for iOS
   }
-
   return null;
 }
 

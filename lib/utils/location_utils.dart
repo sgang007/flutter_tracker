@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_background_geolocation/flutter_background_geolocation.dart'
-    as bg;
-import 'package:location_permissions/location_permissions.dart';
+import 'package:flutter_background_geolocation/flutter_background_geolocation.dart' as bg;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_tracker/actions.dart';
 import 'package:flutter_tracker/colors.dart';
@@ -20,7 +19,7 @@ import 'package:flutter_tracker/utils/color_utils.dart';
 import 'package:flutter_tracker/utils/connectivity_utils.dart';
 import 'package:flutter_tracker/utils/date_utils.dart';
 import 'package:flutter_tracker/utils/user_utils.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart' as latlng;
 
 Logger logger = Logger();
 

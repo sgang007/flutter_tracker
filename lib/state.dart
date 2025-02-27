@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_tracker/model/auth.dart';
 import 'package:flutter_tracker/model/group.dart';
 import 'package:flutter_tracker/model/mapbox.dart';

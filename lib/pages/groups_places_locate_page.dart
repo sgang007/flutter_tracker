@@ -11,12 +11,10 @@ import 'package:flutter_tracker/widgets/place_icon.dart';
 import 'package:flutter_tracker/widgets/place_map.dart';
 import 'package:flutter_tracker/model/groups_viewmodel.dart';
 import 'package:flutter_tracker/state.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart';
 
 class GroupsPlacesLocatePage extends StatefulWidget {
-  GroupsPlacesLocatePage({
-    Key key,
-  }) : super(key: key);
+  GroupsPlacesLocatePage({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _GroupsPlacesLocatePageState();
@@ -24,8 +22,8 @@ class GroupsPlacesLocatePage extends StatefulWidget {
 
 class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
     with TickerProviderStateMixin {
-  AnimationController _detailsBackdropAnimationController;
-  latlng.LatLng _position;
+  AnimationController? _detailsBackdropAnimationController;
+  LatLng? _position;
 
   @override
   void initState() {
@@ -41,26 +39,23 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
 
   @override
   void dispose() {
-    _detailsBackdropAnimationController.dispose();
+    _detailsBackdropAnimationController?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return StoreConnector<AppState, GroupsViewModel>(
       converter: (store) => GroupsViewModel.fromStore(store),
       onInit: _activatePlace,
       builder: (_, viewModel) => WillPopScope(
         onWillPop: () {
           final store = StoreProvider.of<AppState>(context);
-          // store.dispatch(ClearActivePlaceAction());
           store.dispatch(NavigatePopAction());
           return Future.value(true);
         },
         child: Scaffold(
-          resizeToAvoidBottomPadding: false,
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             title: const Text(
               'Locate a Place',
@@ -74,9 +69,7 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
     );
   }
 
-  Widget _createContent(
-    GroupsViewModel viewModel,
-  ) {
+  Widget _createContent(GroupsViewModel viewModel) {
     return Container(
       child: Material(
         child: Column(
@@ -89,10 +82,7 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
                     expandMap: true,
                     canRecenter: false,
                     showDistance: false,
-                    positionCallback: (
-                      latlng.LatLng position,
-                      double zoneDistance,
-                    ) {
+                    positionCallback: (LatLng position, double zoneDistance) {
                       _position = position;
                     },
                   ),
@@ -115,12 +105,13 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
                           bottom: 10.0,
                           top: 0.0,
                         ),
-                        child: FlatButton(
-                          color: AppTheme.primary,
-                          splashColor: AppTheme.primaryAccent,
-                          textColor: Colors.white,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            shape: StadiumBorder(),
+                          ),
                           child: const Text('Next'),
-                          shape: StadiumBorder(),
                           onPressed: () => _tapPlaceDetails(),
                         ),
                       ),
@@ -135,10 +126,8 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
     );
   }
 
-  void _activatePlace(
-    final store,
-  ) {
-    _position = latlng.LatLng(
+  void _activatePlace(final store) {
+    _position = LatLng(
       store.state.user.location.coords.latitude,
       store.state.user.location.coords.longitude,
     );
@@ -146,19 +135,17 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
     store.dispatch(UpdateActivePlaceAction(_position));
   }
 
-  Widget _buildPlaceDetails(
-    GroupsViewModel viewModel,
-  ) {
-    Place place = viewModel.activePlace;
+  Widget _buildPlaceDetails(GroupsViewModel viewModel) {
+    Place? place = viewModel.activePlace;
     if (place == null) {
       return _buildLocating();
     }
 
     if (place != null) {
       if (viewModel.searchingPlaces) {
-        _detailsBackdropAnimationController.forward();
-      } else if (_detailsBackdropAnimationController.isCompleted) {
-        _detailsBackdropAnimationController.reverse();
+        _detailsBackdropAnimationController?.forward();
+      } else if (_detailsBackdropAnimationController?.isCompleted ?? false) {
+        _detailsBackdropAnimationController?.reverse();
       }
     }
 
@@ -182,7 +169,7 @@ class _GroupsPlacesLocatePageState extends State<GroupsPlacesLocatePage>
                 child: Padding(
                   padding: const EdgeInsets.only(left: 10.0),
                   child: Text(
-                    viewModel.activePlace.details.vicinity,
+                    viewModel.activePlace?.details.vicinity ?? '',
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

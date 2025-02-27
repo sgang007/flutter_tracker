@@ -9,10 +9,12 @@ import 'package:flutter_tracker/utils/date_utils.dart';
 import 'package:flutter_tracker/utils/place_utils.dart';
 import 'package:flutter_tracker/utils/shadow_utils.dart';
 import 'package:flutter_tracker/widgets/user_avatar.dart';
+import 'package:flutter_tracker/widgets/list_show_more.dart';
+import 'package:flutter_tracker/widgets/place_icon.dart';
 
 class PlaceActivityRow extends StatefulWidget {
   final PlaceActivity activity;
-  final Function tap;
+  final VoidCallback? tap;
 
   PlaceActivityRow({
     this.activity,
@@ -21,6 +23,66 @@ class PlaceActivityRow extends StatefulWidget {
 
   @override
   State createState() => PlaceActivityRowState();
+}
+
+class PlaceActivityRowState extends State<PlaceActivityRow> with TickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return StoreConnector<AppState, GroupsViewModel>(
+      converter: (store) => GroupsViewModel.fromStore(store),
+      builder: (_, viewModel) => Container(
+        color: Colors.white,
+        child: Material(
+          child: InkWell(
+            onTap: widget.tap,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: _buildActivityRow(viewModel),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildActivityRow(GroupsViewModel viewModel) {
+    List<Widget> lines = [];
+
+    if (widget.activity != null) {
+      lines.add(
+        Expanded(
+          flex: 8,
+          child: Container(
+            child: Wrap(
+              direction: Axis.vertical,
+              children: [
+                Text(
+                  getEventText(widget.activity.type),
+                  style: TextStyle(fontSize: 18.0),
+                ),
+                Text(
+                  widget.activity.created.toDate().toString(),
+                  style: TextStyle(fontSize: 12.0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return lines;
+  }
 }
 
 class PlaceActivityRowState extends State<PlaceActivityRow> {

@@ -8,8 +8,8 @@ import 'package:flutter_tracker/widgets/list_show_more.dart';
 import 'package:flutter_tracker/widgets/place_icon.dart';
 
 class PlaceRow extends StatefulWidget {
-  final Place place;
-  final Function tap;
+  final Place? place;
+  final VoidCallback? tap;
 
   PlaceRow({
     this.place,
@@ -21,7 +21,8 @@ class PlaceRow extends StatefulWidget {
 }
 
 class PlaceRowState extends State<PlaceRow> with TickerProviderStateMixin {
-  initState() {
+  @override
+  void initState() {
     super.initState();
   }
 
@@ -47,31 +48,19 @@ class PlaceRowState extends State<PlaceRow> with TickerProviderStateMixin {
                       child: Wrap(
                         direction: Axis.vertical,
                         children: [
-                          Row(
-                            children: <Widget>[
-                              PlaceIcon(),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: _buildPlaceInfo(viewModel),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          Text(
+                            widget.place?.name ?? '',
+                            style: TextStyle(fontSize: 18.0),
                           ),
+                          if (widget.place?.details?.vicinity != null)
+                            Text(
+                              widget.place!.details.vicinity,
+                              style: TextStyle(fontSize: 12.0),
+                            ),
                         ],
                       ),
                     ),
                   ),
-                  ListShowMore(),
                 ],
               ),
             ),
@@ -79,43 +68,5 @@ class PlaceRowState extends State<PlaceRow> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-  List<Widget> _buildPlaceInfo(
-    GroupsViewModel viewModel,
-  ) {
-    List<Widget> widgets = [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            (widget.place.name == null)
-                ? 'N/A'
-                : widget.place.name, // Place name
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    ];
-
-    if (widget.place.lastUpdated != null) {
-      widgets
-        ..add(
-          Text(
-            lastPlaceActivity(
-              viewModel.activePlace,
-              viewModel.latestPlaceActivity,
-              useTimeago: true,
-            ),
-            style: const TextStyle(
-              fontSize: 12.0,
-              color: Colors.black38,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        );
-    }
-
-    return widgets;
   }
 }

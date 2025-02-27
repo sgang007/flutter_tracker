@@ -1,77 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:location_permissions/location_permissions.dart';
-import 'package:flutter_tracker/colors.dart';
 import 'package:flutter_tracker/model/groups_viewmodel.dart';
 import 'package:flutter_tracker/state.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LocationPermissionFab extends StatefulWidget {
   final double bottomPosition;
-  final Function onTap;
+  final VoidCallback? onTap;
 
   LocationPermissionFab({
-    this.bottomPosition = 10.0,
+    Key? key,
+    this.bottomPosition = 0.0,
     this.onTap,
-  });
+  }) : super(key: key);
 
   @override
-  _LocationPermissionFabState createState() => _LocationPermissionFabState();
+  State<StatefulWidget> createState() => _LocationPermissionFabState();
 }
 
 class _LocationPermissionFabState extends State<LocationPermissionFab> {
-  PermissionStatus _permissionStatus = PermissionStatus.granted;
+  Permission _locationPermission = Permission.location;
+  PermissionStatus _permissionStatus = PermissionStatus.denied;
 
   @override
   void initState() {
     super.initState();
-    _checkLocationPermissionStatus();
+    _checkPermission();
   }
 
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return StoreConnector<AppState, GroupsViewModel>(
-        converter: (store) => GroupsViewModel.fromStore(store),
-        builder: (_, viewModel) {
-          if (viewModel.locationPermissionStatus == PermissionStatus.granted) {
-            return Container();
-          }
-
-          return _buildMapTypeFab();
-        });
-  }
-
-  void _checkLocationPermissionStatus() {
-    final Future<PermissionStatus> statusFuture =
-        LocationPermissions().checkPermissionStatus();
-
-    statusFuture.then((PermissionStatus status) {
-      setState(() {
-        _permissionStatus = status;
-      });
+  Future<void> _checkPermission() async {
+    final status = await _locationPermission.status;
+    setState(() {
+      _permissionStatus = status;
     });
   }
 
-  Widget _buildMapTypeFab() {
-    return (_permissionStatus == PermissionStatus.granted)
-        ? Container()
-        : Positioned(
-            bottom: widget.bottomPosition,
-            left: 0.0,
-            right: 0.0,
-            child: RawMaterialButton(
-              fillColor: AppTheme.error(),
-              shape: CircleBorder(),
-              padding: const EdgeInsets.all(6.0),
-              elevation: 1.0,
-              child: Icon(
-                Icons.warning,
-                color: Colors.white,
-                size: 20.0,
-              ),
-              onPressed: (widget.onTap == null) ? null : widget.onTap,
+  @override
+  Widget build(BuildContext context) {
+    return StoreConnector<AppState, GroupsViewModel>(
+      converter: (store) => GroupsViewModel.fromStore(store),
+      builder: (_, viewModel) {
+        if (_permissionStatus == PermissionStatus.granted) {
+          return Container();
+        }
+
+        return Positioned(
+          right: 10.0,
+          bottom: widget.bottomPosition + 10.0,
+          child: FloatingActionButton(
+            heroTag: 'location_permission_fab',
+            backgroundColor: Colors.white,
+            child: Icon(
+              Icons.location_off,
+              color: Colors.red,
             ),
-          );
+            onPressed: widget.onTap,
+          ),
+        );
+      },
+    );
   }
 }

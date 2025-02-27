@@ -1,92 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tracker/colors.dart';
 
-class CustomTextField extends StatefulWidget {
-  final bool autovalidate;
-  final String initialValue;
-  final String hintText;
+class AppTextField extends StatefulWidget {
+  final String? labelText;
+  final String? hintText;
+  final String? helperText;
+  final String? errorText;
   final Color color;
-  final IconData icon;
-  final Color iconColor;
-  final Widget suffixIcon;
+  final bool obscureText;
+  final bool enabled;
+  final bool readOnly;
   final int maxLines;
   final bool autofocus;
-  final TextInputType keyboardType;
+  final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
-  final TextEditingController controller;
-  final FormFieldValidator<String> validator;
-  final FormFieldSetter<String> onSaved;
-  final FormFieldSetter<String> onChanged;
+  final TextEditingController? controller;
+  final FormFieldValidator<String>? validator;
+  final FormFieldSetter<String>? onSaved;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
+  final bool autovalidateMode;
 
-  CustomTextField({
-    this.autovalidate = false,
-    this.initialValue,
+  AppTextField({
+    Key? key,
+    this.labelText,
     this.hintText,
-    this.color: Colors.black,
-    this.icon,
-    this.iconColor,
-    this.suffixIcon,
-    this.maxLines: 1,
-    this.autofocus: false,
+    this.helperText,
+    this.errorText,
+    this.color = Colors.black,
+    this.obscureText = false,
+    this.enabled = true,
+    this.readOnly = false,
+    this.maxLines = 1,
+    this.autofocus = false,
     this.keyboardType,
-    this.textCapitalization: TextCapitalization.words,
+    this.textCapitalization = TextCapitalization.words,
     this.controller,
     this.validator,
     this.onSaved,
     this.onChanged,
-  });
+    this.onTap,
+    this.autovalidateMode = false,
+  }) : super(key: key);
 
   @override
-  _CustomTextFieldState createState() => _CustomTextFieldState();
+  _AppTextFieldState createState() => _AppTextFieldState();
 }
 
-class _CustomTextFieldState extends State<CustomTextField> {
+class _AppTextFieldState extends State<AppTextField> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
-      autovalidate: widget.autovalidate,
-      initialValue: widget.initialValue,
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        hintText: widget.hintText,
+        helperText: widget.helperText,
+        errorText: widget.errorText,
+        labelStyle: TextStyle(color: widget.color),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: widget.color),
+        ),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppTheme.primary),
+        ),
+      ),
+      style: TextStyle(color: widget.color),
+      obscureText: widget.obscureText,
+      enabled: widget.enabled,
+      readOnly: widget.readOnly,
       maxLines: widget.maxLines,
       autofocus: widget.autofocus,
+      keyboardType: widget.keyboardType,
       textCapitalization: widget.textCapitalization,
       validator: widget.validator,
-      onChanged: widget.onChanged,
       onSaved: widget.onSaved,
-      style: TextStyle(
-        color: widget.color,
-      ),
-      decoration: InputDecoration(
-        hintText: widget.hintText,
-        contentPadding: const EdgeInsets.only(
-          left: 0.0,
-          right: 20.0,
-          top: 15.0,
-        ),
-        prefixIcon: Icon(
-          widget.icon,
-          color: (widget.iconColor == null)
-              ? AppTheme.inactive()
-              : widget.iconColor,
-        ),
-        suffixIcon: widget.suffixIcon,
-        focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(
-            color: Colors.grey[500],
-            width: 2.0,
-          ),
-        ),
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: AppTheme.inactive()),
-        ),
-      ),
+      onChanged: widget.onChanged,
+      onTap: widget.onTap,
+      autovalidateMode: widget.autovalidateMode ? AutovalidateMode.always : AutovalidateMode.disabled,
     );
   }
 }

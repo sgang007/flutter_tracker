@@ -4,31 +4,78 @@ import 'package:flutter_tracker/actions.dart';
 import 'package:flutter_tracker/model/message.dart';
 
 abstract class BaseAuthService {
-  Future<FirebaseUser> signIn(
+  Future<User> signIn(
     String email,
     String password,
   );
 
-  Future<FirebaseUser> signUp(
-    String name,
+  Future<User> signUp(
     String email,
-    String password, {
-    store,
-  });
+    String password,
+    String displayName,
+  );
 
-  Future<FirebaseUser> getCurrentUser();
-
-  Future<void> sendEmailVerification({
-    store,
-  });
-
+  Future<User> getCurrentUser();
   Future<void> signOut();
-  Future<bool> isEmailVerified();
-  Future<void> resetPassword(
-    String email, {
-    store,
-    bottomOffset,
-  });
+}
+
+class Auth implements BaseAuth {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  Future<User> signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) {
+      throw Exception('Google Sign In was cancelled');
+    }
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final UserCredential result = await _firebaseAuth.signInWithCredential(credential);
+    return result.user!;
+  }
+
+  Future<User> signIn(
+    String email,
+    String password,
+  ) async {
+    final UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return result.user!;
+  }
+
+  Future<User> signUp(
+    String email,
+    String password,
+    String displayName,
+  ) async {
+    final UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    await result.user?.updateDisplayName(displayName);
+    return result.user!;
+  }
+
+  Future<User> getCurrentUser() async {
+    final User? user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('No user currently signed in');
+    }
+    return user;
+  }
+
+  Future<void> signOut() async {
+    await _googleSignIn.signOut();
+    return _firebaseAuth.signOut();
+  }
 }
 
 class AuthService implements BaseAuthService {

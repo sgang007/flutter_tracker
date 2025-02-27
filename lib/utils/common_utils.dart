@@ -1,5 +1,45 @@
 import 'package:flutter/material.dart';
 
+List<Widget> filterNullWidgets(List<Widget?> widgets) {
+  return widgets.where((widget) => widget != null).cast<Widget>().toList();
+}
+
+List<Widget> filterEmptyWidgets(List<Widget> widgets) {
+  return widgets.where((widget) => widget != null).toList();
+}
+
+String? getInitials(String? name) {
+  if (name == null || name.isEmpty) {
+    return null;
+  }
+
+  List<String> nameParts = name.split(' ');
+  if (nameParts.isEmpty) {
+    return null;
+  }
+
+  if (nameParts.length == 1) {
+    return nameParts[0][0].toUpperCase();
+  }
+
+  return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
+}
+
+String formatNumber(num number) {
+  return number.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
+}
+
+String formatCurrency(num amount) {
+  return '$${formatNumber(amount)}';
+}
+
+String formatPercentage(num percentage) {
+  return '${formatNumber(percentage)}%';
+}
+
 const APPBAR_HEIGHT = 80.0;
 const NOTIFICATION_MESSAGE_HEIGHT = 24.0;
 

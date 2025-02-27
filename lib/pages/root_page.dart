@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:battery/battery.dart';
-import 'package:connectivity/connectivity.dart';
-import 'package:device_info/device_info.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +11,7 @@ import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_tracker/actions.dart';
+import 'package:flutter_tracker/colors.dart';
 import 'package:flutter_tracker/model/app.dart';
 import 'package:flutter_tracker/model/auth.dart';
 import 'package:flutter_tracker/model/groups_viewmodel.dart';
@@ -27,7 +28,9 @@ import 'package:flutter_tracker/utils/location_utils.dart';
 import 'package:flutter_tracker/utils/message_utils.dart';
 import 'package:flutter_tracker/utils/rc_utils.dart';
 import 'package:flutter_tracker/widgets/backdrop.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:redux/redux.dart';
 
 class RootPage extends StatefulWidget {
@@ -36,7 +39,7 @@ class RootPage extends StatefulWidget {
   final RemoteConfig remoteConfig;
 
   RootPage({
-    Key key,
+    Key? key,
     this.authService,
     this.store,
     this.remoteConfig,
@@ -73,38 +76,11 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
     updateConnectionStatus(null, widget.remoteConfig, widget.store);
   }
 
-  /*
-   * This observes the 'state' of the application.
-   * If the state is 'resumed' then the app should interact directly with firebase.
-   * If the state is 'inactive', 'paused' or 'suspending' then the app should use the user endpoint url.
-   */
   @override
   void didChangeAppLifecycleState(
     AppLifecycleState state,
   ) {
     widget.store.dispatch(SetAppStateAction(state));
-
-    /*
-    setState(() {
-      switch (state) {
-        case AppLifecycleState.resumed:
-          logger.d('Using firebase');
-          setActiveConfig(context, widget.store);
-          break;
-
-        // case AppLifecycleState.inactive:
-        case AppLifecycleState.paused:
-        case AppLifecycleState.inactive:
-          logger.d('Using endpoint');
-          GroupsViewModel viewModel = GroupsViewModel.fromStore(widget.store);
-          setInactiveConfig(context, viewModel, widget.store);
-          break;
-
-        default:
-          break;
-      }
-    });
-    */
   }
 
   @override
@@ -135,11 +111,9 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         switch (_authStatus) {
           case AuthStatus.NOT_DETERMINED:
             return showScaffoldLoadingBackdrop();
-            break;
 
           case AuthStatus.ONBOARDING:
             return OnboardingPage();
-            break;
 
           case AuthStatus.NEEDS_ACCOUNT_VERIFICATION:
           case AuthStatus.NOT_LOGGED_IN:
@@ -156,15 +130,11 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
               onVerify: _onVerify,
             );
 
-            break;
-
           case AuthStatus.LOGGED_IN:
             return GroupsHomePage(
               authService: widget.authService,
               onSignedOut: () => onSignedOut(widget.store),
             );
-
-            break;
 
           default:
             return showScaffoldLoadingBackdrop();
@@ -175,13 +145,12 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
 
   void _checkUser(
     GroupsViewModel viewModel, {
-    String email,
-    String password,
+    String? email,
+    String? password,
   }) async {
-    FirebaseUser user = await widget.authService.getCurrentUser();
+    User? user = await widget.authService.getCurrentUser();
     if (user == null) {
       setState(() {
-        // _authStatus = AuthStatus.NOT_LOGGED_IN;
         _authStatus = AuthStatus.ONBOARDING;
       });
     } else if ((user != null) &&
@@ -193,7 +162,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         widget.store.dispatch(SetAuthStatusAction(_authStatus));
       });
 
-      if (user.isEmailVerified) {
+      if (user.emailVerified) {
         if (!_userDataRequested) {
           widget.store.dispatch(CancelFamilyDataEventsAction());
           widget.store.dispatch(RequestFamilyDataAction(user.uid));
@@ -215,15 +184,12 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
           _listenForDevice(user);
           _listenForTimezone(user);
 
-          // Load the background location service
           initLocation(context, widget.store);
           configureLocationSharing(viewModel);
 
-          // Activates the users' primary group if one isn't already activated
           if (viewModel.user.activeGroup == null) {
             widget.store
                 .dispatch(ActivateGroupAction(viewModel.user.primaryGroup));
-            // Requests the active group member activity if a group member is already activated
           } else if (viewModel.user.activeGroupMember != null) {
             widget.store.dispatch(CancelUserActivityAction());
             widget.store.dispatch(RequestUserActivityDataAction(
@@ -255,13 +221,9 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         widget.store.dispatch(SetAuthStatusAction(_authStatus));
       });
 
-      // Listen to the user doc
-      widget.store.dispatch(RequestFamilyDataAction(user.uid));
-
-      // Listen to the users' places
+      widget.store.dispatch(RequestFamilyDataAction(user!.uid));
       widget.store.dispatch(RequestPlacesAction(user.uid));
 
-      // Pull the display name from the firebase user and update the user doc
       widget.store.dispatch(UpdateFamilyDataEventAction(
         family: {
           'name': user.displayName,
@@ -271,20 +233,14 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
     });
   }
 
-  /*
-   * Listens for the app version & build number
-   */
   Future<void> _listenForAppVersion(
-    FirebaseUser user,
+    User user,
   ) async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     AppVersion version = AppVersion().fromPackageInfo(packageInfo);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    // Pull the display name from the firebase user and update the user doc
     widget.store.dispatch(UpdateFamilyDataEventAction(
       family: {
         'version': AppVersion().toMap(version),
@@ -293,44 +249,35 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
     ));
   }
 
-  /*
-   * Listens for the users' device
-   */
   Future<void> _listenForDevice(
-    FirebaseUser user,
+    User user,
   ) async {
-    Map<dynamic, dynamic> _deviceData;
+    Map<String, dynamic> deviceData = <String, dynamic>{};
 
     try {
       if (Platform.isAndroid) {
-        _deviceData = readAndroidBuildData(await _deviceInfoPlugin.androidInfo);
+        deviceData = readAndroidBuildData(await _deviceInfoPlugin.androidInfo);
       } else if (Platform.isIOS) {
-        _deviceData = readIosDeviceInfo(await _deviceInfoPlugin.iosInfo);
+        deviceData = readIosDeviceInfo(await _deviceInfoPlugin.iosInfo);
       }
     } on PlatformException {
-      _deviceData = <String, dynamic>{
+      deviceData = <String, dynamic>{
         'error:': 'Failed to get platform version.',
       };
     }
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    // Pull the display name from the firebase user and update the user doc
     widget.store.dispatch(UpdateFamilyDataEventAction(
       family: {
-        'device': _deviceData,
+        'device': deviceData,
       },
       userId: user.uid,
     ));
   }
 
-  /*
-   * Listens for the users' timezone
-   */
   Future<void> _listenForTimezone(
-    FirebaseUser user,
+    User user,
   ) async {
     String timezone;
 
@@ -340,11 +287,8 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
       timezone = 'Failed to get the timezone.';
     }
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    // Pull the display name from the firebase user and update the user doc
     widget.store.dispatch(UpdateFamilyDataEventAction(
       family: {
         'timezone': timezone,

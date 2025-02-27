@@ -5,7 +5,7 @@ import 'package:flutter_tracker/colors.dart';
 import 'package:flutter_tracker/model/place.dart';
 import 'package:flutter_tracker/utils/date_utils.dart';
 import 'package:flutter_tracker/utils/encoding_utils.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart' as latlng;
 import 'package:flutter_tracker/widgets/place_icon.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -20,10 +20,12 @@ String buildAuthString(
 List<Place> nearByPlacesFromJsonList(
   List<dynamic> list,
 ) {
-  List<Place> places = List<Place>();
+  List<Place> places = [];
 
   if (list != null) {
-    list.forEach((place) => places..add(Place.fromJson(place)));
+    for (var place in list) {
+      places.add(Place.fromJson(place));
+    }
   }
 
   return places;
@@ -256,6 +258,24 @@ Widget buildMarkerCircle(
           ),
         )
       : Container();
+}
+
+CircleMarker buildPlaceRadiusMarker(
+  LatLng position,
+  double radius, {
+  Color color = Colors.blue,
+  double strokeWidth = 2.0,
+  double borderStrokeWidth = 2.0,
+  Color borderColor = Colors.white,
+}) {
+  return CircleMarker(
+    point: position,
+    color: color.withOpacity(0.2),
+    borderColor: borderColor,
+    borderStrokeWidth: borderStrokeWidth,
+    radius: radius,
+    useRadiusInMeter: true,
+  );
 }
 
 CircleMarker buildPlaceRadiusMarker(

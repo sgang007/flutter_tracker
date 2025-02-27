@@ -1,8 +1,8 @@
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AppVersion {
-  String version;
-  String buildNumber;
+  String? version;
+  String? buildNumber;
 
   AppVersion({
     this.version,
@@ -10,10 +10,10 @@ class AppVersion {
   });
 
   factory AppVersion.fromJson(
-    Map<dynamic, dynamic> json,
+    Map<dynamic, dynamic>? json,
   ) {
     if (json == null) {
-      return null;
+      return AppVersion();
     }
 
     return AppVersion(
@@ -23,10 +23,10 @@ class AppVersion {
   }
 
   AppVersion fromPackageInfo(
-    PackageInfo packageInfo,
+    PackageInfo? packageInfo,
   ) {
     if (packageInfo == null) {
-      return null;
+      return AppVersion();
     }
 
     return AppVersion(
@@ -35,14 +35,14 @@ class AppVersion {
     );
   }
 
-  Map<String, dynamic> toMap(
-    AppVersion version,
+  Map<String, dynamic>? toMap(
+    AppVersion? version,
   ) {
     if (version == null) {
       return null;
     }
 
-    Map<String, dynamic> versionMap = Map<String, dynamic>();
+    Map<String, dynamic> versionMap = {};
     versionMap['version'] = version.version;
     versionMap['build_number'] = version.buildNumber;
     return versionMap;

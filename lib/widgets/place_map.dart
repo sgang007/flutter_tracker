@@ -14,20 +14,20 @@ import 'package:flutter_tracker/utils/place_utils.dart';
 import 'package:flutter_tracker/utils/uom_utils.dart';
 import 'package:flutter_tracker/widgets/map_center.dart';
 import 'package:flutter_tracker/widgets/section_header.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart';
 
 class PlaceMap extends StatefulWidget {
-  final latlng.LatLng initialPosition;
+  final LatLng? initialPosition;
   final double mapHeight;
   final bool expandMap;
   final bool canRecenter;
   final bool showDistance;
   final double initialDistance;
-  final Function positionCallback;
+  final Function? positionCallback;
   final PlaceMapState appState = PlaceMapState();
 
   PlaceMap({
-    Key key,
+    Key? key,
     this.initialPosition,
     this.mapHeight = 240.0,
     this.expandMap = false,
@@ -43,17 +43,17 @@ class PlaceMap extends StatefulWidget {
 
 class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  Place _originalPlace;
-  latlng.LatLng _currentPosition;
-  double _currentZoomLevel;
+  Place? _originalPlace;
+  LatLng? _currentPosition;
+  double _currentZoomLevel = 0.0;
   double _maxZoomLevel = 17.0;
   double _minZoomLevel = 10.0;
-  double _sliderValue;
-  double _distanceRadius;
+  double _sliderValue = 0.0;
+  double _distanceRadius = 0.0;
   double _minDistanceRadius = 100.0;
   bool _mapPanning = false;
-  Timer _panningDebounce;
-  LatLngBounds _mapBounds;
+  Timer? _panningDebounce;
+  LatLngBounds _mapBounds = LatLngBounds();
 
   @override
   void initState() {
@@ -90,14 +90,14 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
 
         if (_currentPosition == null) {
           if (viewModel.activePlace == null) {
-            _currentPosition = latlng.LatLng(
+            _currentPosition = LatLng(
               viewModel.user.location.coords.latitude,
               viewModel.user.location.coords.longitude,
             );
           } else {
-            _currentPosition = latlng.LatLng(
-              viewModel.activePlace.details.position[0],
-              viewModel.activePlace.details.position[1],
+            _currentPosition = LatLng(
+              viewModel.activePlace!.details.position[0],
+              viewModel.activePlace!.details.position[1],
             );
           }
         }
@@ -122,16 +122,13 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
     GroupsViewModel viewModel,
   ) {
     _mapBounds = LatLngBounds();
-    _mapBounds.extend(_currentPosition);
+    _mapBounds.extend(_currentPosition!);
 
     FlutterMap _map = buildMap(
       viewModel,
       _mapController,
-      position: _currentPosition,
+      position: _currentPosition!,
       zoom: _currentZoomLevel,
-      // minZoom: _currentZoomLevel,
-      // maxZoom: _currentZoomLevel,
-      // interactive: false,
       onPositionChanged: (position, hasGesture) =>
           _positionChanged(position, hasGesture, viewModel),
       mapScaleOffset: 20.0,
@@ -155,29 +152,6 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
       ),
     );
   }
-
-  /*
-  Marker _buildMarker(
-    latlng.LatLng latLng,
-  ) {
-    return Marker(
-      width: MediaQuery.of(context).size.width,
-      // height: widget.mapHeight,
-      point: latLng,
-      anchorPos: AnchorPos.align(AnchorAlign.center),
-      builder: (context) => InkWell(
-        onTap: null,
-        child: Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            _buildMarkerGroup(),
-            PlaceIcon(),
-          ],
-        ),
-      ),
-    );
-  }
-  */
 
   Widget _buildDistanceSlider() {
     return widget.showDistance
@@ -219,7 +193,7 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
     GroupsViewModel viewModel,
   ) {
     if (_panningDebounce?.isActive ?? false) {
-      _panningDebounce.cancel();
+      _panningDebounce?.cancel();
     }
 
     _panningDebounce = Timer(const Duration(milliseconds: 250), () {
@@ -228,15 +202,15 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
           _mapPanning = true;
         });
 
-        _setZoom(position.zoom);
+        _setZoom(position.zoom ?? _currentZoomLevel);
 
         StoreProvider.of<AppState>(context)
             .dispatch(UpdateActivePlaceAction(position.center));
       }
 
       if (widget.positionCallback != null) {
-        widget.positionCallback(
-          position.center,
+        widget.positionCallback!(
+          position.center!,
           _distanceRadius,
         );
       }
@@ -260,30 +234,26 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
   double _autoMapZoomLevel(
     double radius,
   ) {
-    if (radius != null) {
-      double _zoomLevel = 0;
-      double _radius = (radius + (radius * 2.0));
-      double _scale = (_radius / 328.084); // ~ 100m
+    double _zoomLevel = 0;
+    double _radius = (radius + (radius * 2.0));
+    double _scale = (_radius / 328.084); // ~ 100m
 
-      try {
-        _zoomLevel = (_maxZoomLevel - (math.log(_scale) / math.log(2)));
-        if (_zoomLevel == double.infinity) {
-          _zoomLevel = _maxZoomLevel;
-        }
-      } catch (exception) {
+    try {
+      _zoomLevel = (_maxZoomLevel - (math.log(_scale) / math.log(2)));
+      if (_zoomLevel.isInfinite) {
         _zoomLevel = _maxZoomLevel;
       }
-
-      if (_zoomLevel > _maxZoomLevel) {
-        _zoomLevel = _maxZoomLevel;
-      } else if (_zoomLevel < _minZoomLevel) {
-        _zoomLevel = _minZoomLevel;
-      }
-
-      return _zoomLevel;
+    } catch (exception) {
+      _zoomLevel = _maxZoomLevel;
     }
 
-    return _minZoomLevel;
+    if (_zoomLevel > _maxZoomLevel) {
+      _zoomLevel = _maxZoomLevel;
+    } else if (_zoomLevel < _minZoomLevel) {
+      _zoomLevel = _minZoomLevel;
+    }
+
+    return _zoomLevel;
   }
 
   void _setZoom(
@@ -305,13 +275,8 @@ class PlaceMapState extends State<PlaceMap> with TickerProviderStateMixin {
       if (_distanceRadius < _minDistanceRadius) {
         _distanceRadius = _minDistanceRadius;
       }
-
-      // logger.d(_sliderValue);
-      // logger.d(_autoMapZoomLevel(_distanceRadius));
-      // logger.d(_distanceRadius);
     });
 
-    // final double zoom = _autoMapZoomLevel(_distanceRadius);
     _mapController.move(_mapController.center, zoomLevel);
   }
 }

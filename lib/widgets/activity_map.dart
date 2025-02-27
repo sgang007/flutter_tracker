@@ -14,7 +14,7 @@ import 'package:flutter_tracker/utils/place_utils.dart';
 import 'package:flutter_tracker/widgets/active_driver_data.dart';
 import 'package:flutter_tracker/widgets/map_center.dart';
 import 'package:flutter_tracker/widgets/place_pin.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_tracker/widgets/user_pin.dart';
 
 class ActivityMap extends StatefulWidget {

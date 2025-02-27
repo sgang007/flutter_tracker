@@ -1,45 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tracker/colors.dart';
-import 'package:flutter_tracker/utils/shadow_utils.dart';
+import 'package:flutter_tracker/model/user.dart';
+import 'package:flutter_tracker/utils/icon_utils.dart';
 
-class ActivityIcon extends StatefulWidget {
-  final IconData icon;
+class ActivityIcon extends StatelessWidget {
+  final ActivityType type;
   final double iconSize;
   final double radius;
+  final Color? color;
 
   ActivityIcon({
-    Key key,
-    this.icon,
-    this.iconSize: 22.0,
-    this.radius: 20.0,
-  }) : super(key: key);
+    required this.type,
+    this.iconSize = 22.0,
+    this.radius = 20.0,
+    this.color,
+  });
 
   @override
-  State createState() => ActivityIconState();
-}
-
-class ActivityIconState extends State<ActivityIcon>
-    with TickerProviderStateMixin {
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    double size = (widget.radius * 2.0);
-
+  Widget build(BuildContext context) {
     return Container(
-      width: size,
-      height: size,
-      child: Icon(
-        widget.icon,
-        color: AppTheme.primary,
-        size: widget.iconSize,
-      ),
+      width: radius * 2,
+      height: radius * 2,
       decoration: BoxDecoration(
+        color: color ?? AppTheme.primary,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        getActivityIcon(type),
         color: Colors.white,
-        borderRadius: BorderRadius.all(
-          Radius.circular(widget.radius),
-        ),
-        boxShadow: commonBoxShadow(),
+        size: iconSize,
       ),
     );
   }

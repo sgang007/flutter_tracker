@@ -9,14 +9,14 @@ class AvatarGlow extends StatefulWidget {
   final Widget child;
   final Color outerGlowColor;
   final Color innerGlowColor;
-  final Duration startDelay;
+  final Duration? startDelay;
 
-  AvatarGlow({
-    @required this.child,
+  const AvatarGlow({
+    required this.child,
     this.endRadius = 70.0,
-    this.duration,
+    this.duration = const Duration(milliseconds: 2000),
     this.repeat = true,
-    this.repeatPauseDuration,
+    this.repeatPauseDuration = const Duration(milliseconds: 100),
     this.outerGlowColor = Colors.blue,
     this.innerGlowColor = Colors.blueAccent,
     this.startDelay,
@@ -28,26 +28,26 @@ class AvatarGlow extends StatefulWidget {
 
 class _AvatarGlowState extends State<AvatarGlow>
     with SingleTickerProviderStateMixin {
-  Animation<double> smallDiscAnimation;
-  Animation<double> bigDiscAnimation;
-  Animation<double> alphaAnimation;
-  AnimationController controller;
+  late Animation<double> smallDiscAnimation;
+  late Animation<double> bigDiscAnimation;
+  late Animation<double> alphaAnimation;
+  late AnimationController controller;
 
   @override
   void initState() {
     super.initState();
 
     controller = AnimationController(
-      duration: widget.duration ?? Duration(milliseconds: 2000),
+      duration: widget.duration,
       vsync: this,
     );
 
-    final Animation curve = CurvedAnimation(
+    final Animation<double> curve = CurvedAnimation(
       parent: controller,
       curve: Curves.decelerate,
     );
 
-    smallDiscAnimation = Tween(
+    smallDiscAnimation = Tween<double>(
       begin: ((widget.endRadius * 2.0) / 6.0),
       end: ((widget.endRadius * 2.0) * (3.0 / 4.0)),
     ).animate(curve)
@@ -55,7 +55,7 @@ class _AvatarGlowState extends State<AvatarGlow>
         setState(() {});
       });
 
-    bigDiscAnimation = Tween(
+    bigDiscAnimation = Tween<double>(
       begin: 0.0,
       end: (widget.endRadius * 2.0),
     ).animate(curve)
@@ -63,15 +63,14 @@ class _AvatarGlowState extends State<AvatarGlow>
         setState(() {});
       });
 
-    alphaAnimation = Tween(
+    alphaAnimation = Tween<double>(
       begin: 0.30,
       end: 0.0,
     ).animate(controller);
 
     controller.addStatusListener((_) async {
       if (controller.status == AnimationStatus.completed) {
-        await Future.delayed(
-            widget.repeatPauseDuration ?? Duration(milliseconds: 100));
+        await Future.delayed(widget.repeatPauseDuration);
 
         if (mounted && widget.repeat) {
           controller.reset();
@@ -85,7 +84,7 @@ class _AvatarGlowState extends State<AvatarGlow>
 
   void startAnimation() async {
     if (widget.startDelay != null) {
-      await Future.delayed(widget.startDelay ?? Duration(milliseconds: 1000));
+      await Future.delayed(widget.startDelay!);
 
       if (mounted) {
         controller.forward();

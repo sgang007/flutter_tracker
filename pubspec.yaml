@@ -52,6 +52,7 @@ dependencies:
   flutter_compass: '^0.8.0'
   sticky_headers: '^0.3.0'
   logger: '^2.0.2+1'
+  network_info_plus: '^4.1.0'
 
 dev_dependencies:
   flutter_test:

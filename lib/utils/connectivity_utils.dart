@@ -1,4 +1,4 @@
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_background_geolocation/flutter_background_geolocation.dart'
@@ -7,12 +7,14 @@ import 'package:flutter_tracker/actions.dart';
 import 'package:flutter_tracker/services/users.dart';
 import 'package:flutter_tracker/utils/app_utils.dart';
 import 'package:flutter_tracker/utils/auth_utils.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 final Connectivity _connectivity = Connectivity();
+final NetworkInfo _networkInfo = NetworkInfo();
 
 Future<Map<String, dynamic>> getConnectionData({
-  String authToken,
-  ConnectivityResult result,
+  String? authToken,
+  ConnectivityResult? result,
 }) async {
   if (authToken == null) {
     bg.State state = await bg.BackgroundGeolocation.state;
@@ -29,19 +31,19 @@ Future<Map<String, dynamic>> getConnectionData({
   switch (result) {
     case ConnectivityResult.wifi:
       try {
-        data['wifi_name'] = await _connectivity.getWifiName();
+        data['wifi_name'] = await _networkInfo.getWifiName();
       } on PlatformException {
         // logger.e(e);
       }
 
       try {
-        data['wifi_bssid'] = await _connectivity.getWifiBSSID();
+        data['wifi_bssid'] = await _networkInfo.getWifiBSSID();
       } on PlatformException {
         // logger.e(e);
       }
 
       try {
-        data['wifi_ip'] = await _connectivity.getWifiIP();
+        data['wifi_ip'] = await _networkInfo.getWifiIP();
       } on PlatformException {
         // logger.e(e);
       }
@@ -63,7 +65,7 @@ Future<Map<String, dynamic>> getConnectionData({
 }
 
 Future<void> updateConnectionStatus(
-  ConnectivityResult result,
+  ConnectivityResult? result,
   RemoteConfig remoteConfig,
   final store,
 ) async {
@@ -80,7 +82,7 @@ Future<void> updateConnectionStatus(
           userId: store.state.user.documentId,
         ));
       } else {
-        String endpointUrl = state.extras['user_endpoint'];
+        String? endpointUrl = state.extras['user_endpoint'];
         if ((endpointUrl != null) && (endpointUrl != '')) {
           String authToken = getAuthToken(state.headers['Authorization']);
           Map<String, dynamic> userData = Map<String, dynamic>();

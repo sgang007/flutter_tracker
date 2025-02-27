@@ -5,8 +5,8 @@ import 'package:flutter_tracker/model/cloudinary.dart';
 import 'package:flutter_tracker/model/place.dart';
 import 'package:flutter_tracker/utils/place_utils.dart';
 import 'package:flutter_tracker/utils/user_utils.dart';
-import 'package:latlong/latlong.dart';
-import 'package:latlong/latlong.dart' as latlng;
+import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' as latlng;
 
 class User {
   final String documentId;

@@ -1,5 +1,35 @@
 import 'dart:math';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
+
+const double EARTH_RADIUS = 6371000; // Earth's radius in meters
+
+LatLng calculateEndingGlobalCoordinates(
+    LatLng start,
+    double startBearing,
+    double distance) {
+  double lat1 = radians(start.latitude);
+  double lon1 = radians(start.longitude);
+  double bearing = radians(startBearing);
+
+  double lat2 = asin(
+      sin(lat1) * cos(distance / EARTH_RADIUS) +
+          cos(lat1) * sin(distance / EARTH_RADIUS) * cos(bearing));
+
+  double lon2 = lon1 +
+      atan2(
+          sin(bearing) * sin(distance / EARTH_RADIUS) * cos(lat1),
+          cos(distance / EARTH_RADIUS) - sin(lat1) * sin(lat2));
+
+  return LatLng(degrees(lat2), degrees(lon2));
+}
+
+double radians(double degrees) {
+  return degrees * pi / 180;
+}
+
+double degrees(double radians) {
+  return radians * 180 / pi;
+}
 
 const double piOver180 = PI / 180.0;
 double toDegrees(double radians) {

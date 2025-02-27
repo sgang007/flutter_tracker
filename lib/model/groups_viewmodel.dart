@@ -1,5 +1,5 @@
 import 'package:flutter/scheduler.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_tracker/actions.dart';
 import 'package:flutter_tracker/model/auth.dart';
 import 'package:flutter_tracker/model/group.dart';

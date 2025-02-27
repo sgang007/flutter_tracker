@@ -209,27 +209,71 @@ dynamic activityFromJsonList(
   return activity;
 }
 
-IconData getActivityIcon(
-  ActivityType type,
-) {
+String getActivityText(ActivityType type) {
   switch (type) {
-    case ActivityType.ON_FOOT:
+    case ActivityType.STILL:
+      return 'Still';
+    case ActivityType.WALKING:
+      return 'Walking';
+    case ActivityType.RUNNING:
+      return 'Running';
+    case ActivityType.ON_BICYCLE:
+      return 'On Bicycle';
+    case ActivityType.IN_VEHICLE:
+      return 'In Vehicle';
+    case ActivityType.TILTING:
+      return 'Tilting';
+    case ActivityType.UNKNOWN:
+      return 'Unknown';
+    default:
+      return 'Unknown';
+  }
+}
+
+IconData getActivityIcon(ActivityType type) {
+  switch (type) {
+    case ActivityType.STILL:
+      return Icons.accessibility;
     case ActivityType.WALKING:
       return Icons.directions_walk;
-      break;
-
     case ActivityType.RUNNING:
       return Icons.directions_run;
-      break;
-
-    case ActivityType.IN_VEHICLE:
-      return Icons.directions_car;
-      break;
-
     case ActivityType.ON_BICYCLE:
       return Icons.directions_bike;
-
+    case ActivityType.IN_VEHICLE:
+      return Icons.directions_car;
+    case ActivityType.TILTING:
+      return Icons.screen_rotation;
+    case ActivityType.UNKNOWN:
+      return Icons.help_outline;
     default:
-      return null;
+      return Icons.help_outline;
   }
+}
+
+String getGroupMemberName(GroupMember member, {GroupsViewModel? viewModel}) {
+  if (member.alias != null && member.alias.isNotEmpty) {
+    return member.alias;
+  }
+
+  if (viewModel?.user?.documentId == member.uid) {
+    return 'You';
+  }
+
+  return member.displayName;
+}
+
+List<dynamic> getActivityHistory(User user) {
+  List<dynamic> activity = [];
+  if (user.activity != null) {
+    activity.addAll(user.activity);
+  }
+  return activity;
+}
+
+bool isOnline(GroupMember member) {
+  if (member.location == null || member.location.coords == null) {
+    return false;
+  }
+  return true;
 }
